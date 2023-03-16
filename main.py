@@ -1,28 +1,46 @@
 import folium
 import pandas as pd
-import os
-import requests
 import gspread as gs
 from folium.plugins import FloatImage
-import os
 from folium.plugins import MarkerCluster
+from flask import Flask, render_template, send_from_directory
+import os
+from datetime import timedelta
+import datetime
+import threading
+from threading import Thread
+import requests
 
+import schedule
+import time
+
+from threading import Timer
+
+app = Flask(__name__)
+
+@app.route("/", methods=["GET"])
+def status():
+    print("/")
+    return "Status: OK"
 
 
 gc = gs.service_account(filename='model-zoo-363409-d778a0fccb80.json')
 sh = gc.open_by_url('https://docs.google.com/spreadsheets/d/10awekJr1rw0AikidtV5rVTpM0AI1zjwUcodCp5Q3SXE/edit#gid=1313466868')
-
 ws = sh.worksheet('Лист7')
 
 df = pd.DataFrame(ws.get_all_records())
 
-print(list(df))
 df['X'] = pd.to_numeric(df['X'], errors='coerce')
 df['Y'] = pd.to_numeric(df['Y'], errors='coerce')
+df['X'] = df['X'].round(7)
+df['Y'] = df['Y'].round(7)
 df = df.dropna (subset=['X'])
-# df.to_excel('data_survey.xlsx')
-print (df['X'])
-print (df['Y'])
+
+
+print (df)
+print(list(df))
+df.to_excel('111.xlsx')
+
 
 m = folium.Map(location=[df['X'].mean(), df['Y'].mean()], zoom_start=12)
 image_file = 'https://geo35.ru/upload/CAllcorp2/995/9957d6a37c0ccdd4085cf7a739e7ca14.png'
@@ -31,39 +49,17 @@ FloatImage(image_file, bottom=5, left=45).add_to(m)
 
 
 
-cluster_marina = MarkerCluster(name="Марина",disableClusteringAtZoom=14).add_to(m)
-cluster_natasha = MarkerCluster(name="Наташа",disableClusteringAtZoom=14).add_to(m)
-cluster_map1 = MarkerCluster(name="МАП 1",disableClusteringAtZoom=14).add_to(m)
-cluster_map2 = MarkerCluster(name="МАП 2",disableClusteringAtZoom=14).add_to(m)
+cluster_marina = MarkerCluster(name="Марина",disableClusteringAtZoom=13).add_to(m)
+cluster_natasha = MarkerCluster(name="Наташа",disableClusteringAtZoom=13).add_to(m)
+cluster_map1 = MarkerCluster(name="МАП 1",disableClusteringAtZoom=13).add_to(m)
+cluster_map2 = MarkerCluster(name="МАП 2",disableClusteringAtZoom=13).add_to(m)
 cluster_garage = MarkerCluster(name="Гаражная амнистия",disableClusteringAtZoom=14).add_to(m)
-cluster_pnv = MarkerCluster(name="ПНВ",disableClusteringAtZoom=14).add_to(m)
-cluster_sud = MarkerCluster(name="Суд",disableClusteringAtZoom=14).add_to(m)
-cluster_jopa = MarkerCluster(name="Попа",disableClusteringAtZoom=14).add_to(m)
-cluster_win = MarkerCluster(name="Победа",disableClusteringAtZoom=14).add_to(m)
+cluster_pnv = MarkerCluster(name="ПНВ",disableClusteringAtZoom=13).add_to(m)
+cluster_sud = MarkerCluster(name="Суд",disableClusteringAtZoom=13).add_to(m)
+cluster_jopa = MarkerCluster(name="Попа",disableClusteringAtZoom=13).add_to(m)
+cluster_win = MarkerCluster(name="Победа",disableClusteringAtZoom=13).add_to(m)
+cluster_yandex = MarkerCluster(name="Яндекс",disableClusteringAtZoom=13).add_to(m)
 
-
-
-# df_marina = df.loc[df['Иконка'].isin(['m'])]
-# df_natasha = df.loc[df['Иконка'].isin(['h'])]
-# df_map1 = df.loc[df['Иконка'].isin(['1'])]
-# df_map2 = df.loc[df['Иконка'].isin(['2'])]
-#
-# df_garage = df.loc[df['Цвет'].isin(['green'])]
-# df_pnv = df.loc[df['Цвет'].isin(['orange'])]
-# df_sud = df.loc[df['Цвет'].isin(['red'])]
-# df_jopa = df.loc[df['Цвет'].isin(['black'])]
-#
-# df_win = df.loc[df['Иконка'].isin(['star'])]
-#
-# # layer_marina = folium.FeatureGroup(name='Марина', show=True)
-# # layer_natasha = folium.FeatureGroup(name='Наташа', show=True)
-# # layer_map1 = folium.FeatureGroup(name='МАП 1', show=True)
-# # layer_map2 = folium.FeatureGroup(name='МАП 2', show=True)
-# # layer_garage = folium.FeatureGroup(name='Гаражная амнистия', show=True)
-# # layer_pnv = folium.FeatureGroup(name='ПНВ', show=True)
-# # layer_sud = folium.FeatureGroup(name='Суд ', show=True)
-# # layer_jopa = folium.FeatureGroup(name='Попа', show=True)
-# # layer_win = folium.FeatureGroup(name='Победа', show=True)
 
 
 for index, row in df.iterrows():
@@ -92,6 +88,8 @@ for index, row in df.iterrows():
             cluster_jopa.add_child(marker)
         elif row['Иконка'] == 'star':
             cluster_win.add_child(marker)
+        elif row['Иконка'] == 'location-dot':
+            cluster_yandex.add_child(marker)
 
 
 folium.LayerControl().add_to(m)
