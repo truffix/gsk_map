@@ -1,11 +1,8 @@
 meta:
-  environment: jvm
+  environment: python
   toolchain:
-    name: maven
-    version: 17
-
-build:
-  args: -Dserver.port=80 -Pproduction
+   name: pip
 
 run:
-  jarName: bag-end.jar
+ command: gunicorn --bind 0.0.0.0:5000 app:app
+ containerPort: 5000
