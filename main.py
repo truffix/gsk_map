@@ -96,4 +96,5 @@ for index, row in df.iterrows():
 folium.LayerControl().add_to(m)
 m.save("mymap1.html")
 
-app.run(host="0.0.0.0", port=4000, debug=True)
+if __name__ == "__main__":
+   app.run(port=8080)
