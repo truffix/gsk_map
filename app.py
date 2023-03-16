@@ -20,7 +20,7 @@ from threading import Timer
 app = Flask(__name__)
 cors = CORS(app)
 
-@app.route("/")
+@app.route("/data")
 def status():
     print("/")
     return "Status: OK"
