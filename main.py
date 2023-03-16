@@ -4,6 +4,7 @@ import gspread as gs
 from folium.plugins import FloatImage
 from folium.plugins import MarkerCluster
 from flask import Flask, render_template, send_from_directory
+from flask_cors import CORS
 import os
 from datetime import timedelta
 import datetime
@@ -17,6 +18,7 @@ import time
 from threading import Timer
 
 app = Flask(__name__)
+cors = CORS(app)
 
 @app.route("/", methods=["GET"])
 def status():
