@@ -3,6 +3,7 @@ import pandas as pd
 import gspread as gs
 from folium.plugins import FloatImage
 from folium.plugins import MarkerCluster
+from folium.plugins import Search, FeatureGroupSubGroup
 from flask import Flask, render_template, send_from_directory
 from flask_cors import CORS
 import os
@@ -20,7 +21,7 @@ from threading import Timer
 app = Flask(__name__)
 cors = CORS(app)
 
-@app.route("/data")
+@app.route("/")
 def status():
     print("/")
     return "Status: OK"
@@ -35,8 +36,8 @@ df = pd.DataFrame(ws.get_all_records())
 
 df['X'] = pd.to_numeric(df['X'], errors='coerce')
 df['Y'] = pd.to_numeric(df['Y'], errors='coerce')
-df['X'] = df['X'].round(7)
-df['Y'] = df['Y'].round(7)
+# df['X'] = df['X'].round(7)
+# df['Y'] = df['Y'].round(7)
 df = df.dropna (subset=['X'])
 
 
@@ -50,18 +51,31 @@ image_file = 'https://geo35.ru/upload/CAllcorp2/995/9957d6a37c0ccdd4085cf7a739e7
 FloatImage(image_file, bottom=5, left=45).add_to(m)
 
 
+layer1 = folium.FeatureGroup(name='Все ГСК', show=True)
+m.add_child(layer1)
+
+cluster_marina = FeatureGroupSubGroup(layer1, name="Марина",control=True)
+m.add_child(cluster_marina)
+cluster_natasha = FeatureGroupSubGroup(layer1,name="Наташа",control=True)
+m.add_child(cluster_natasha)
+cluster_map1 = FeatureGroupSubGroup(layer1,name="МАП 1",control=True)
+m.add_child(cluster_map1)
+cluster_map2 = FeatureGroupSubGroup(layer1,name="МАП 2",control=True)
+m.add_child(cluster_map2)
+cluster_garage = FeatureGroupSubGroup(layer1,name="Гаражная амнистия",control=True)
+m.add_child(cluster_garage)
+cluster_pnv = FeatureGroupSubGroup(layer1,name="ПНВ",control=True)
+m.add_child(cluster_pnv)
+cluster_sud = FeatureGroupSubGroup(layer1,name="Суд",control=True)
+m.add_child(cluster_sud)
+cluster_jopa = FeatureGroupSubGroup(layer1,name="Попа",control=True)
+m.add_child(cluster_jopa)
+cluster_win = FeatureGroupSubGroup(layer1,name="Победа",control=True)
+m.add_child(cluster_win)
+cluster_yandex = FeatureGroupSubGroup(layer1,name="Яндекс",control=True)
+m.add_child(cluster_yandex)
 
 
-cluster_marina = MarkerCluster(name="Марина",disableClusteringAtZoom=13).add_to(m)
-cluster_natasha = MarkerCluster(name="Наташа",disableClusteringAtZoom=13).add_to(m)
-cluster_map1 = MarkerCluster(name="МАП 1",disableClusteringAtZoom=13).add_to(m)
-cluster_map2 = MarkerCluster(name="МАП 2",disableClusteringAtZoom=13).add_to(m)
-cluster_garage = MarkerCluster(name="Гаражная амнистия",disableClusteringAtZoom=14).add_to(m)
-cluster_pnv = MarkerCluster(name="ПНВ",disableClusteringAtZoom=13).add_to(m)
-cluster_sud = MarkerCluster(name="Суд",disableClusteringAtZoom=13).add_to(m)
-cluster_jopa = MarkerCluster(name="Попа",disableClusteringAtZoom=13).add_to(m)
-cluster_win = MarkerCluster(name="Победа",disableClusteringAtZoom=13).add_to(m)
-cluster_yandex = MarkerCluster(name="Яндекс",disableClusteringAtZoom=13).add_to(m)
 
 
 
@@ -70,7 +84,7 @@ for index, row in df.iterrows():
                       popup=folium.Popup("<b>ГСК</b> " + row['ГСК'] + "<br><b>Ответственный</b> " + row[
                           'Ответственный'] + "<br><b>Статус</b> " + row[
                                              'Статус'] + "<br><b>Движение дела</b> " +  row[
-                                             'Движение дела'], max_width=300),
+                                             'Движение дела'], max_width=300),name = row['ГСК'],
                       icon=folium.Icon(color=row['Цвет'], icon=row['Иконка'], prefix='fa'))
 
         if row['Иконка'] == 'm':
@@ -91,12 +105,21 @@ for index, row in df.iterrows():
             cluster_jopa.add_child(marker)
         elif row['Иконка'] == 'star':
             cluster_win.add_child(marker)
-        elif row['Иконка'] == 'location-dot':
+        elif row['Цвет'] == 'lightgray':
             cluster_yandex.add_child(marker)
 
+servicesearch = Search(
+    layer=layer1,
+    search_label="name",
+    geom_type='Point',
+    placeholder='Название ГСК',
+    collapsed=False,
+    position="topright"
+).add_to(m)
 
 folium.LayerControl().add_to(m)
-m.save("mymap1.html")
+
+m.save("templates/mymap1.html")
 
 if __name__ == "__main__":
    app.run(port=8080)
